@@ -427,7 +427,7 @@ a{ color: inherit; }
 }
 .details__row:last-child{ border-bottom: none; }
 .details__k{ color: var(--muted); font-weight: 700; }
-.details__v{ font-weight: 700; color: #111827; }
+.details__v{ font-weight: 400; color: #111827; }
 @media (max-width: 640px){
   .details__row{ grid-template-columns: 1fr; }
 }
