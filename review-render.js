@@ -61,6 +61,48 @@
     return html;
   };
 
+  const quickIcon = (kind) => {
+    if (kind === "duration") {
+      return `
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="13" r="7"></circle>
+          <path d="M12 13V9"></path>
+          <path d="M12 13L15 15"></path>
+          <path d="M9 3h6"></path>
+          <path d="M12 3v3"></path>
+        </svg>
+      `;
+    }
+
+    if (kind === "cancellation") {
+      return `
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="8"></circle>
+          <path d="M8.5 8.5l7 7"></path>
+          <path d="M15.5 8.5l-7 7"></path>
+        </svg>
+      `;
+    }
+
+    if (kind === "ticket") {
+      return `
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 9h16v6h-2a2 2 0 0 0 0 4h-12a2 2 0 0 0 0-4h-2z"></path>
+          <path d="M12 9v10"></path>
+        </svg>
+      `;
+    }
+
+    return `
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="12" cy="12" r="8"></circle>
+        <path d="M4 12h16"></path>
+        <path d="M12 4a12 12 0 0 0 0 16"></path>
+        <path d="M12 4a12 12 0 0 1 0 16"></path>
+      </svg>
+    `;
+  };
+
   const imageStyleAttr = (position, fit) => {
     const parts = [];
     if (position) {
@@ -72,14 +114,254 @@
     return parts.length ? ` style="${parts.join(";")}"` : "";
   };
 
-  const paragraphHtml = data.overview
+  const parseVerbatimDoc = (rawText) => {
+    if (!rawText) {
+      return null;
+    }
+
+    const lines = rawText
+      .replaceAll("\r", "")
+      .replaceAll("\f", "")
+      .split("\n")
+      .map((line) => line.replace(/\s+$/g, ""));
+
+    const findIndex = (regex, start = 0) => {
+      for (let i = start; i < lines.length; i += 1) {
+        if (regex.test(lines[i].trim())) {
+          return i;
+        }
+      }
+      return -1;
+    };
+
+    const headingLine = (regex) => {
+      const idx = findIndex(regex);
+      return idx >= 0 ? lines[idx].trim() : "";
+    };
+
+    const valueAfterHeading = (regex) => {
+      const idx = findIndex(regex);
+      if (idx < 0) {
+        return "";
+      }
+
+      const current = lines[idx].trim();
+      const inline = current.match(/^[^:]+:\s*(.+)$/);
+      if (inline && inline[1].trim()) {
+        return inline[1].trim();
+      }
+
+      for (let i = idx + 1; i < lines.length; i += 1) {
+        const next = lines[i].trim();
+        if (next) {
+          return next;
+        }
+      }
+      return "";
+    };
+
+    const sectionAfterHeading = (startRegex, endRegexes) => {
+      const startIdx = findIndex(startRegex);
+      if (startIdx < 0) {
+        return [];
+      }
+
+      let endIdx = lines.length;
+      for (let i = startIdx + 1; i < lines.length; i += 1) {
+        const probe = lines[i].trim();
+        if (endRegexes.some((rx) => rx.test(probe))) {
+          endIdx = i;
+          break;
+        }
+      }
+
+      return lines.slice(startIdx + 1, endIdx);
+    };
+
+    const paragraphsFromLines = (block) => {
+      const out = [];
+      let current = [];
+
+      for (const line of block) {
+        const t = line.trim();
+        if (!t) {
+          if (current.length) {
+            out.push(current.join(" ").trim());
+            current = [];
+          }
+          continue;
+        }
+        current.push(t);
+      }
+
+      if (current.length) {
+        out.push(current.join(" ").trim());
+      }
+
+      return out;
+    };
+
+    const listFromBullets = (block) => {
+      const out = [];
+      let current = "";
+
+      for (const line of block) {
+        const t = line.trim();
+        if (!t) {
+          continue;
+        }
+
+        const bullet = t.match(/^[\u2022\-*]\s*(.*)$/);
+        if (bullet) {
+          if (current) {
+            out.push(current.trim());
+          }
+          current = (bullet[1] || "").trim();
+          continue;
+        }
+
+        if (current) {
+          current += ` ${t}`;
+        } else {
+          out.push(t);
+        }
+      }
+
+      if (current) {
+        out.push(current.trim());
+      }
+
+      return out;
+    };
+
+    const parseDetails = (block) => {
+      const out = [];
+      const keyRegex = /^(Meeting point|Meeting Point|End point|End Point|Ending Point|Accessibility|What to Bring|What to bring)\s*:?[\s\t]*(.*)$/i;
+
+      for (let i = 0; i < block.length; i += 1) {
+        const t = block[i].trim();
+        if (!t) {
+          continue;
+        }
+
+        const match = t.match(keyRegex);
+        if (match) {
+          let value = (match[2] || "").trim();
+          if (!value) {
+            let j = i + 1;
+            while (j < block.length && !block[j].trim()) {
+              j += 1;
+            }
+            if (j < block.length && !keyRegex.test(block[j].trim())) {
+              value = block[j].trim();
+              i = j;
+            }
+          }
+
+          out.push({
+            k: match[1].replace(/\s+/g, " ").trim(),
+            v: value
+          });
+          continue;
+        }
+
+        if (out.length) {
+          out[out.length - 1].v = `${out[out.length - 1].v} ${t}`.trim();
+        }
+      }
+
+      return out;
+    };
+
+    const headingOverview = /^overview$/i;
+    const headingWhy = /^why travelers/i;
+    const headingGood = /^good to know/i;
+    const headingIncluded = /^(what[\u2019']?s included|included)$/i;
+    const headingNotIncluded = /^not included:?$/i;
+    const headingDetails = /^details$/i;
+    const headingReviews = /^reviews\b/i;
+    const headingRatings = /^ratings?\b/i;
+
+    const overview = paragraphsFromLines(
+      sectionAfterHeading(headingOverview, [headingWhy, headingGood, headingIncluded, headingDetails, headingReviews])
+    );
+
+    const whyList = listFromBullets(
+      sectionAfterHeading(headingWhy, [headingGood, headingIncluded, headingDetails, headingReviews, headingRatings])
+    );
+
+    const goodList = listFromBullets(
+      sectionAfterHeading(headingGood, [headingIncluded, headingNotIncluded, headingDetails, headingReviews, headingRatings])
+    );
+
+    const included = listFromBullets(
+      sectionAfterHeading(headingIncluded, [headingNotIncluded, headingDetails, headingReviews, headingRatings])
+    );
+
+    const notIncluded = listFromBullets(
+      sectionAfterHeading(headingNotIncluded, [headingDetails, headingReviews, headingRatings])
+    );
+
+    const details = parseDetails(sectionAfterHeading(headingDetails, [headingReviews, headingRatings]));
+
+    return {
+      quick: {
+        duration: valueAfterHeading(/^duration\b/i),
+        cancellation: valueAfterHeading(/^cancellation\b/i),
+        mobileTicket: valueAfterHeading(/^mobile ticket\b/i),
+        language: valueAfterHeading(/^language\b/i)
+      },
+      overview,
+      whyTitle: headingLine(headingWhy),
+      whyList,
+      goodTitle: headingLine(headingGood),
+      goodList,
+      includedTitle: headingLine(headingIncluded),
+      included,
+      notIncludedTitle: headingLine(headingNotIncluded),
+      notIncluded,
+      details
+    };
+  };
+
+  const applyVerbatimOverrides = (base) => {
+    const parsed = parseVerbatimDoc(base.verbatimText);
+    if (!parsed) {
+      return base;
+    }
+
+    return {
+      ...base,
+      quick: {
+        ...base.quick,
+        ...(parsed.quick.duration ? { duration: parsed.quick.duration } : {}),
+        ...(parsed.quick.cancellation ? { cancellation: parsed.quick.cancellation } : {}),
+        ...(parsed.quick.mobileTicket ? { mobileTicket: parsed.quick.mobileTicket } : {}),
+        ...(parsed.quick.language ? { language: parsed.quick.language } : {})
+      },
+      overview: parsed.overview.length ? parsed.overview : base.overview,
+      whyTitle: parsed.whyTitle || base.whyTitle,
+      whyList: parsed.whyList.length ? parsed.whyList : base.whyList,
+      goodTitle: parsed.goodTitle || base.goodTitle,
+      goodList: parsed.goodList.length ? parsed.goodList : base.goodList,
+      includedTitle: parsed.includedTitle || base.includedTitle || "Included",
+      included: parsed.included.length ? parsed.included : base.included,
+      notIncludedTitle: parsed.notIncludedTitle || base.notIncludedTitle || "Not included",
+      notIncluded: parsed.notIncluded.length ? parsed.notIncluded : base.notIncluded,
+      details: parsed.details.length ? parsed.details : base.details
+    };
+  };
+
+  const view = applyVerbatimOverrides(data);
+
+  const paragraphHtml = view.overview
     .map((item) => `<p class="p">${escapeHtml(item)}</p>`)
     .join("");
 
   const makeList = (items) =>
     `<ul class="list">${items.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`;
 
-  const detailsHtml = data.details
+  const detailsHtml = view.details
     .map(
       (row) => `
         <div class="details__row">
@@ -90,11 +372,11 @@
     )
     .join("");
 
-  const ratingsTotal = data.ratingBars.reduce((sum, row) => sum + Number(row.count || 0), 0);
-  const reviewTotal = Number(data.reviewCount || 0);
+  const ratingsTotal = view.ratingBars.reduce((sum, row) => sum + Number(row.count || 0), 0);
+  const reviewTotal = Number(view.reviewCount || 0);
   const normalizedReviewTotal = ratingsTotal > 0 ? ratingsTotal : reviewTotal;
 
-  const barsHtml = data.ratingBars
+  const barsHtml = view.ratingBars
     .map((row) => {
       const width = normalizedReviewTotal > 0 ? (Number(row.count || 0) / normalizedReviewTotal) * 100 : 0;
       return `
@@ -109,7 +391,7 @@
     })
     .join("");
 
-  const reviewItems = data.reviews.map((review, idx) => ({
+  const reviewItems = view.reviews.map((review, idx) => ({
     ...review,
     _index: idx,
     _epoch: parseDate(review.date),
@@ -133,32 +415,43 @@
     </article>
   `;
 
-  const crumbsHtml = data.crumbs.map((crumb) => `<a href="#">${escapeHtml(crumb)}</a><span>></span>`).join("");
-  const galleryClass = data.gallery.layout === "portrait" ? "gallery gallery--portrait" : "gallery gallery--wide";
+  const crumbsHtml = view.crumbs.map((crumb) => `<a href="#">${escapeHtml(crumb)}</a><span>></span>`).join("");
+  const galleryLayoutClassMap = {
+    portrait: "gallery--portrait",
+    wide: "gallery--wide",
+    neptune: "gallery--neptune",
+    puberty: "gallery--puberty",
+    kudumbashree: "gallery--kudumbashree",
+    "neptune-day": "gallery--neptune-day",
+    "puberty-rites": "gallery--puberty-rites",
+    stellenbosch: "gallery--stellenbosch",
+    "camel-trek": "gallery--camel-trek"
+  };
+  const galleryClass = `gallery ${galleryLayoutClassMap[view.gallery.layout] || "gallery--wide"}`;
 
   root.innerHTML = `
     <nav class="crumbs" aria-label="Breadcrumb">
       ${crumbsHtml}
-      <span class="crumbs__current">${escapeHtml(data.title)}</span>
+      <span class="crumbs__current">${escapeHtml(view.title)}</span>
     </nav>
 
     <section class="headline">
       <div class="headline__left">
-        <h1 class="h1">${escapeHtml(data.title)}</h1>
+        <h1 class="h1">${escapeHtml(view.title)}</h1>
 
         <div class="subrow">
-          <div class="ratingrow" aria-label="Rated ${data.score.toFixed(1)} out of 5">
+          <div class="ratingrow" aria-label="Rated ${view.score.toFixed(1)} out of 5">
             <span class="bubbles" aria-hidden="true">
-              ${bubbles(data.score, false)}
+              ${bubbles(view.score, false)}
             </span>
-            <strong class="ratingrow__score">${data.score.toFixed(1)}</strong>
+            <strong class="ratingrow__score">${view.score.toFixed(1)}</strong>
             <a class="mutedlink" href="#reviews">(${formatNum(normalizedReviewTotal)} reviews)</a>
           </div>
 
           <span class="dot">|</span>
-          <span class="tag tag--good">${escapeHtml(data.cancellationTag)}</span>
+          <span class="tag tag--good">${escapeHtml(view.cancellationTag)}</span>
           <span class="dot">|</span>
-          <span class="muted">${escapeHtml(data.priceLine)}</span>
+          <span class="muted">${escapeHtml(view.priceLine)}</span>
         </div>
       </div>
 
@@ -171,23 +464,23 @@
     <section class="grid">
       <section class="${galleryClass}" aria-label="Photo gallery">
         <figure class="gallery__big">
-          <img src="${escapeHtml(data.gallery.main)}" alt="${escapeHtml(data.gallery.mainAlt)}"${imageStyleAttr(
-            data.gallery.mainPosition,
-            data.gallery.mainFit
+          <img src="${escapeHtml(view.gallery.main)}" alt="${escapeHtml(view.gallery.mainAlt)}"${imageStyleAttr(
+            view.gallery.mainPosition,
+            view.gallery.mainFit
           )} />
-          <span class="gallery__count">Photos: ${formatNum(data.gallery.count)}</span>
+          <span class="gallery__count">Photos: ${formatNum(view.gallery.count)}</span>
         </figure>
         <div class="gallery__stack">
           <figure class="gallery__side">
-            <img src="${escapeHtml(data.gallery.top)}" alt="${escapeHtml(data.gallery.topAlt)}"${imageStyleAttr(
-              data.gallery.topPosition,
-              data.gallery.topFit
+            <img src="${escapeHtml(view.gallery.top)}" alt="${escapeHtml(view.gallery.topAlt)}"${imageStyleAttr(
+              view.gallery.topPosition,
+              view.gallery.topFit
             )} />
           </figure>
           <figure class="gallery__side">
-            <img src="${escapeHtml(data.gallery.bottom)}" alt="${escapeHtml(data.gallery.bottomAlt)}"${imageStyleAttr(
-              data.gallery.bottomPosition,
-              data.gallery.bottomFit
+            <img src="${escapeHtml(view.gallery.bottom)}" alt="${escapeHtml(view.gallery.bottomAlt)}"${imageStyleAttr(
+              view.gallery.bottomPosition,
+              view.gallery.bottomFit
             )} />
           </figure>
         </div>
@@ -195,24 +488,24 @@
 
       <section class="quick">
         <div class="quick__item">
-          <div class="quick__icon" aria-hidden="true">Dur</div>
+          <div class="quick__icon" aria-hidden="true">${quickIcon("duration")}</div>
           <div class="quick__label">Duration</div>
-          <div class="quick__value">${escapeHtml(data.quick.duration)}</div>
+          <div class="quick__value">${escapeHtml(view.quick.duration)}</div>
         </div>
         <div class="quick__item">
-          <div class="quick__icon" aria-hidden="true">Can</div>
+          <div class="quick__icon" aria-hidden="true">${quickIcon("cancellation")}</div>
           <div class="quick__label">Cancellation</div>
-          <div class="quick__value">${escapeHtml(data.quick.cancellation)}</div>
+          <div class="quick__value">${escapeHtml(view.quick.cancellation)}</div>
         </div>
         <div class="quick__item">
-          <div class="quick__icon" aria-hidden="true">Tkt</div>
+          <div class="quick__icon" aria-hidden="true">${quickIcon("ticket")}</div>
           <div class="quick__label">Mobile ticket</div>
-          <div class="quick__value">${escapeHtml(data.quick.mobileTicket)}</div>
+          <div class="quick__value">${escapeHtml(view.quick.mobileTicket)}</div>
         </div>
         <div class="quick__item">
-          <div class="quick__icon" aria-hidden="true">Lng</div>
+          <div class="quick__icon" aria-hidden="true">${quickIcon("language")}</div>
           <div class="quick__label">Language</div>
-          <div class="quick__value">${escapeHtml(data.quick.language)}</div>
+          <div class="quick__value">${escapeHtml(view.quick.language)}</div>
         </div>
       </section>
 
@@ -229,13 +522,13 @@
 
         <div class="callouts">
           <div class="callout">
-            <div class="callout__title">${escapeHtml(data.whyTitle)}</div>
-            ${makeList(data.whyList)}
+            <div class="callout__title">${escapeHtml(view.whyTitle)}</div>
+            ${makeList(view.whyList)}
           </div>
 
           <div class="callout">
-            <div class="callout__title">${escapeHtml(data.goodTitle)}</div>
-            ${makeList(data.goodList)}
+            <div class="callout__title">${escapeHtml(view.goodTitle)}</div>
+            ${makeList(view.goodList)}
           </div>
         </div>
       </section>
@@ -244,12 +537,12 @@
         <h2 class="h2">What's included</h2>
         <div class="two">
           <div>
-            <h3 class="h3">Included</h3>
-            ${makeList(data.included)}
+            <h3 class="h3">${escapeHtml(view.includedTitle || "Included")}</h3>
+            ${makeList(view.included)}
           </div>
           <div>
-            <h3 class="h3">Not included</h3>
-            ${makeList(data.notIncluded)}
+            <h3 class="h3">${escapeHtml(view.notIncludedTitle || "Not included")}</h3>
+            ${makeList(view.notIncluded)}
           </div>
         </div>
       </section>
@@ -264,10 +557,10 @@
       <section id="reviews" class="card">
         <div class="rating-summary" aria-label="Rating summary">
           <div class="rating-summary__score">
-            <div class="rating-summary__value">${data.score.toFixed(1)}</div>
-            <div class="rating-summary__label">${escapeHtml(data.ratingLabel)}</div>
+            <div class="rating-summary__value">${view.score.toFixed(1)}</div>
+            <div class="rating-summary__label">${escapeHtml(view.ratingLabel)}</div>
             <div class="rating-summary__bubbles" aria-hidden="true">
-              ${bubbles(data.score, true)}
+              ${bubbles(view.score, true)}
             </div>
             <div class="rating-summary__count"><span aria-hidden="true">(${formatNum(
               normalizedReviewTotal
