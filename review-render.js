@@ -204,6 +204,8 @@
     const listFromBullets = (block) => {
       const out = [];
       let current = "";
+      const stopPattern =
+        /^(Reviews?\b|Ratings?\b|Meeting point|Meeting Point|End point|End Point|Ending Point|Accessibility|What to bring|What to Bring|\d+(\.\d+)?\s*\([0-9,]+\s*reviews?\))/i;
 
       for (const line of block) {
         const t = line.trim();
@@ -221,6 +223,11 @@
         }
 
         if (current) {
+          if (stopPattern.test(t)) {
+            out.push(current.trim());
+            current = "";
+            break;
+          }
           current += ` ${t}`;
         } else {
           out.push(t);

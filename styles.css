@@ -24,6 +24,10 @@ body {
   height: 100%;
 }
 
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
   margin: 0;
   font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
@@ -33,11 +37,20 @@ body {
 }
 
 .wrap {
-  width: min(var(--max), calc(100% - 32px));
+  width: calc(100% - 32px);
+  max-width: var(--max);
   margin: 0 auto;
 }
 
 a {
+  color: inherit;
+}
+
+input,
+button,
+select,
+textarea {
+  font: inherit;
   color: inherit;
 }
 
@@ -65,6 +78,7 @@ a {
 
 /* Shared top bar */
 .topbar {
+  position: -webkit-sticky;
   position: sticky;
   top: 0;
   z-index: 20;
@@ -86,6 +100,7 @@ a {
   gap: 10px;
   font-weight: 800;
   text-decoration: none;
+  flex: 0 0 auto;
 }
 
 .logo__mark {
@@ -102,23 +117,39 @@ a {
 .searchbar {
   flex: 1;
   max-width: 540px;
+  min-width: 0;
   display: flex;
   align-items: center;
   gap: 8px;
   background: #fff;
   border: 1px solid var(--line);
   border-radius: 999px;
+  overflow: hidden;
   padding: 8px 10px 8px 14px;
 }
 
 .searchbar input {
+  -webkit-appearance: none;
+  appearance: none;
+  background: #fff;
   border: 0;
   outline: none;
+  min-width: 0;
   width: 100%;
   font-size: 0.95rem;
+  border-radius: 0;
+}
+
+.searchbar input::-webkit-search-decoration,
+.searchbar input::-webkit-search-cancel-button,
+.searchbar input::-webkit-search-results-button,
+.searchbar input::-webkit-search-results-decoration {
+  -webkit-appearance: none;
 }
 
 .iconbtn {
+  -webkit-appearance: none;
+  appearance: none;
   border: 0;
   background: var(--chip);
   border-radius: 999px;
@@ -135,6 +166,7 @@ a {
   align-items: center;
   gap: 10px;
   white-space: nowrap;
+  flex: 0 0 auto;
 }
 
 .topnav__link {
@@ -217,13 +249,25 @@ a {
 }
 
 .where-search input {
+  -webkit-appearance: none;
+  appearance: none;
+  background: #fff;
   border: 1px solid var(--line);
   border-radius: 999px;
   padding: 12px 16px;
   font-size: 1rem;
 }
 
+.where-search input::-webkit-search-decoration,
+.where-search input::-webkit-search-cancel-button,
+.where-search input::-webkit-search-results-button,
+.where-search input::-webkit-search-results-decoration {
+  -webkit-appearance: none;
+}
+
 .where-search button {
+  -webkit-appearance: none;
+  appearance: none;
   border: 0;
   border-radius: 999px;
   padding: 12px 20px;
@@ -287,6 +331,7 @@ a {
   padding: 12px;
   display: grid;
   gap: 8px;
+  background: #fff;
 }
 
 .dest-card__title {
