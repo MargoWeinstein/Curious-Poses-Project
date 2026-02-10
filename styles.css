@@ -596,13 +596,7 @@ textarea {
 
 .gallery--neptune-day .gallery__stack,
 .gallery--neptune .gallery__stack {
-  order: 1;
   grid-template-rows: 1fr 1fr;
-}
-
-.gallery--neptune-day .gallery__big,
-.gallery--neptune .gallery__big {
-  order: 2;
 }
 
 .gallery--camel-trek .gallery__stack {
@@ -612,13 +606,7 @@ textarea {
 
 .gallery--puberty-rites .gallery__stack,
 .gallery--puberty .gallery__stack {
-  order: 1;
   grid-template-rows: 1.05fr 0.95fr;
-}
-
-.gallery--puberty-rites .gallery__big,
-.gallery--puberty .gallery__big {
-  order: 2;
 }
 
 .gallery__count {

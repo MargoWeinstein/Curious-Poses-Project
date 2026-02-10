@@ -438,7 +438,7 @@
           <div class="muted small">${escapeHtml(reply.date)}</div>
         </div>
       </div>
-      <h4 class="review-reply__title">${escapeHtml(reply.title)}</h4>
+      ${reply.title ? `<h4 class="review-reply__title">${escapeHtml(reply.title)}</h4>` : ""}
       <p class="p">${escapeHtml(reply.text)}</p>
     </div>
   `;
