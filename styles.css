@@ -1096,6 +1096,46 @@ textarea {
   font-weight: 900;
 }
 
+.review-reply {
+  margin: 12px 0 0 52px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+.review-reply__top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.avatar--reply {
+  width: 30px;
+  height: 30px;
+  font-size: 0.78rem;
+  background: #dbeafe;
+  color: #1e3a8a;
+}
+
+.review-reply__name {
+  font-weight: 800;
+  color: #1f2937;
+}
+
+.review-reply__title {
+  margin: 0 0 6px;
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+@media (max-width: 640px) {
+  .review-reply {
+    margin-left: 0;
+  }
+}
+
 .footer {
   margin-top: 18px;
   border-top: 1px solid var(--line);

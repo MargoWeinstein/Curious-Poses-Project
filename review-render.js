@@ -398,29 +398,72 @@
     })
     .join("");
 
-  const reviewItems = view.reviews.map((review, idx) => ({
+  const replyNameSet = new Set(["dean marti", "management reply", "mangement reply"]);
+  const isReplyReview = (review) => replyNameSet.has(String(review.name || "").trim().toLowerCase());
+
+  const reviewRows = view.reviews.map((review, idx) => ({
     ...review,
     _index: idx,
-    _epoch: parseDate(review.date),
-    _search: [review.name, review.date, review.title, review.text].join(" ").toLowerCase()
+    _epoch: parseDate(review.date)
   }));
 
-  const reviewHtml = (review) => `
-    <article class="review">
-      <div class="review__top">
-        <div class="avatar" aria-hidden="true">${escapeHtml(initials(review.name))}</div>
+  const reviewThreads = [];
+  for (const row of reviewRows) {
+    if (isReplyReview(row) && reviewThreads.length) {
+      reviewThreads[reviewThreads.length - 1].replies.push(row);
+      continue;
+    }
+
+    reviewThreads.push({
+      parent: row,
+      replies: []
+    });
+  }
+
+  for (const thread of reviewThreads) {
+    const parent = thread.parent;
+    const parentSearch = [parent.name, parent.date, parent.title, parent.text].join(" ");
+    const replySearch = thread.replies
+      .map((reply) => [reply.name, reply.date, reply.title, reply.text].join(" "))
+      .join(" ");
+    thread._search = `${parentSearch} ${replySearch}`.toLowerCase();
+  }
+
+  const replyHtml = (reply) => `
+    <div class="review-reply">
+      <div class="review-reply__top">
+        <div class="avatar avatar--reply" aria-hidden="true">${escapeHtml(initials(reply.name))}</div>
         <div class="review__who">
-          <div class="review__name">${escapeHtml(review.name)}</div>
-          <div class="muted small">${escapeHtml(review.date)}</div>
-        </div>
-        <div class="bubbles" aria-label="${review.stars} out of 5">
-          ${bubbles(review.stars, false)}
+          <div class="review-reply__name">Reply from ${escapeHtml(reply.name)}</div>
+          <div class="muted small">${escapeHtml(reply.date)}</div>
         </div>
       </div>
-      <h3 class="review__title">${escapeHtml(review.title)}</h3>
-      <p class="p">${escapeHtml(review.text)}</p>
-    </article>
+      <h4 class="review-reply__title">${escapeHtml(reply.title)}</h4>
+      <p class="p">${escapeHtml(reply.text)}</p>
+    </div>
   `;
+
+  const reviewHtml = (thread) => {
+    const review = thread.parent;
+
+    return `
+      <article class="review">
+        <div class="review__top">
+          <div class="avatar" aria-hidden="true">${escapeHtml(initials(review.name))}</div>
+          <div class="review__who">
+            <div class="review__name">${escapeHtml(review.name)}</div>
+            <div class="muted small">${escapeHtml(review.date)}</div>
+          </div>
+          <div class="bubbles" aria-label="${review.stars} out of 5">
+            ${bubbles(review.stars, false)}
+          </div>
+        </div>
+        <h3 class="review__title">${escapeHtml(review.title)}</h3>
+        <p class="p">${escapeHtml(review.text)}</p>
+        ${thread.replies.map(replyHtml).join("")}
+      </article>
+    `;
+  };
 
   const crumbsHtml = view.crumbs.map((crumb) => `<a href="#">${escapeHtml(crumb)}</a><span>></span>`).join("");
   const galleryLayoutClassMap = {
@@ -598,7 +641,7 @@
     </section>
 
     <footer class="footer muted small">
-      Built from your eight source review documents.
+      Template created by ChatGPT
     </footer>
   `;
 
@@ -632,28 +675,34 @@
     const sorted = [...items];
 
     if (sortOrder === "Highest rated") {
-      sorted.sort((a, b) => b.stars - a.stars || b._epoch - a._epoch || a._index - b._index);
+      sorted.sort(
+        (a, b) =>
+          b.parent.stars - a.parent.stars || b.parent._epoch - a.parent._epoch || a.parent._index - b.parent._index
+      );
       return sorted;
     }
 
     if (sortOrder === "Lowest rated") {
-      sorted.sort((a, b) => a.stars - b.stars || b._epoch - a._epoch || a._index - b._index);
+      sorted.sort(
+        (a, b) =>
+          a.parent.stars - b.parent.stars || b.parent._epoch - a.parent._epoch || a.parent._index - b.parent._index
+      );
       return sorted;
     }
 
-    sorted.sort((a, b) => b._epoch - a._epoch || a._index - b._index);
+    sorted.sort((a, b) => b.parent._epoch - a.parent._epoch || a.parent._index - b.parent._index);
     return sorted;
   };
 
   const applyReviewFilters = () => {
     const query = searchQuery.trim().toLowerCase();
-    const filtered = reviewItems.filter((review) => !query || review._search.includes(query));
+    const filtered = reviewThreads.filter((thread) => !query || thread._search.includes(query));
     const sorted = sortReviews(filtered);
 
     reviewListEl.innerHTML = sorted.map(reviewHtml).join("");
     reviewEmptyEl.hidden = sorted.length !== 0;
 
-    const total = reviewItems.length;
+    const total = reviewThreads.length;
     const shown = sorted.length;
     const label = total === 1 ? "review" : "reviews";
     reviewStateEl.textContent = `${shown} of ${total} ${label} shown`;

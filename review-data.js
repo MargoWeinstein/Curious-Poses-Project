@@ -453,7 +453,7 @@ window.REVIEW_DATA = {
       "count": 212,
       "layout": "neptune-day",
       "mainPosition": "center 34%",
-      "topPosition": "center 54%",
+      "topPosition": "center 58%",
       "bottomPosition": "center 42%",
       "mainFit": "cover",
       "topFit": "cover",
@@ -990,7 +990,7 @@ window.REVIEW_DATA = {
       "layout": "camel-trek",
       "mainPosition": "center 60%",
       "topPosition": "center 46%",
-      "bottomPosition": "center 38%"
+      "bottomPosition": "center 44%"
     },
     "quick": {
       "duration": "2 hours",
