@@ -434,7 +434,7 @@
       <div class="review-reply__top">
         <div class="avatar avatar--reply" aria-hidden="true">${escapeHtml(initials(reply.name))}</div>
         <div class="review__who">
-          <div class="review-reply__name">Reply from ${escapeHtml(reply.name)}</div>
+          <div class="review-reply__name">${reply.name.toLowerCase().startsWith("reply from") || reply.name.toLowerCase().startsWith("réponse du") ? escapeHtml(reply.name) : "Reply from " + escapeHtml(reply.name)}</div>
           <div class="muted small">${escapeHtml(reply.date)}</div>
         </div>
       </div>
