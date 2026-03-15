@@ -398,8 +398,8 @@
     })
     .join("");
 
-  const replyNameSet = new Set(["dean marti", "management reply", "mangement reply"]);
-  const isReplyReview = (review) => replyNameSet.has(String(review.name || "").trim().toLowerCase());
+  const replyNameSet = new Set(["dean marti", "management reply", "mangement reply", "sas in-house counsel", "sas field program coordinator", "development office", "reply from management", "reply from adwoa b", "reply from kofi d", "reply from francesca l", "reply from dean marti", "réponse du propriétaire"]);
+  const isReplyReview = (review) => review.isReply === true || replyNameSet.has(String(review.name || "").trim().toLowerCase());
 
   const reviewRows = view.reviews.map((review, idx) => ({
     ...review,
@@ -639,6 +639,10 @@
         <p id="reviews-empty" class="review-empty muted small" hidden>No reviews match that search.</p>
       </section>
     </section>
+
+    <div class="home-btn-wrap">
+      <a href="./index.html" class="pill pill--dark home-btn">Back to Adventures</a>
+    </div>
 
     <footer class="footer muted small">
       Template created by ChatGPT

@@ -1124,6 +1124,8 @@ textarea {
   }
 }
 
+.home-btn-wrap { text-align: center; margin: 2rem 0 0; }
+
 .footer {
   margin-top: 18px;
   border-top: 1px solid var(--line);
