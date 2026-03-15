@@ -273,6 +273,9 @@
         }
 
         if (out.length) {
+          if (/^\d+(\.\d+)?\s*(\(|stars?\b|reviews?\b)/i.test(t) || /^(Reviews|Ratings)\b/i.test(t)) {
+            break;
+          }
           out[out.length - 1].v = `${out[out.length - 1].v} ${t}`.trim();
         }
       }
