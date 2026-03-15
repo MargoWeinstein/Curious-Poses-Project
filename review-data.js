@@ -13,16 +13,17 @@ window.REVIEW_DATA = {
     "priceLine": "From $28,650 - $61,000",
     "gallery": {
       "main": "./images/main.png",
-      "top": "./images/Other_main.png",
+      "top": "./images/SAS top right.jpg",
       "bottom": "./images/bottom_right.png",
       "mainAlt": "Semester at Sea ship",
-      "topAlt": "MV World Odyssey at sea",
+      "topAlt": "Semester at Sea voyage",
       "bottomAlt": "Cabin interior on board",
       "count": 125,
       "layout": "wide",
       "mainPosition": "center 52%",
-      "topPosition": "center 50%",
-      "bottomPosition": "center 55%"
+      "topPosition": "center bottom",
+      "bottomPosition": "center 55%",
+      "topFit": "cover"
     },
     "quick": {
       "duration": "105 days",
