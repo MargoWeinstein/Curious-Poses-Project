@@ -518,7 +518,6 @@
             view.gallery.mainPosition,
             view.gallery.mainFit
           )} />
-          <span class="gallery__count">Photos: ${formatNum(view.gallery.count)}</span>
         </figure>
         <div class="gallery__stack">
           <figure class="gallery__side">
@@ -645,7 +644,7 @@
     </div>
 
     <footer class="footer muted small">
-      Template created by ChatGPT
+      Template created by AI
     </footer>
   `;
 
