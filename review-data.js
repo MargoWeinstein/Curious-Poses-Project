@@ -1083,7 +1083,7 @@ window.REVIEW_DATA = {
         "text": "To be fair to the tour company, looking only at the tour itself: five stars. The tour provided exactly what it promised: a luxury experience, good ebikes, gorgeous scenery, excellent wines, and delicious cheese boards. But I could not shake the images of the miles of corrugated shacks we passed on the road to Stellenbosch. I couldn\u2019t get past the inequality. South Africa is amazing for tourists, not so much for its citizens."
       },
       {
-        "name": "Management reply",
+        "name": "Management",
         "date": "March 2024",
         "stars": 5,
         "title": "",
@@ -1097,7 +1097,7 @@ window.REVIEW_DATA = {
         "text": "Too much biking, not enough wine. No support vehicle, had to keep riding, and you had to pedal for the battery assist to work. Should have taken a wine tour in a van."
       },
       {
-        "name": "Management reply",
+        "name": "Management",
         "date": "April 2025",
         "stars": 5,
         "title": "",
@@ -1111,7 +1111,7 @@ window.REVIEW_DATA = {
         "text": "Looks like Napa Valley with fewer tourists. I thought it would look and feel more like Africa. I don\u2019t know if this is good or bad, but 5 stars."
       },
       {
-        "name": "Management reply",
+        "name": "Management",
         "date": "September 2025",
         "stars": 5,
         "title": "",

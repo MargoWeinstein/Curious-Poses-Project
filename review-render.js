@@ -398,7 +398,7 @@
     })
     .join("");
 
-  const replyNameSet = new Set(["dean marti", "management reply", "mangement reply", "sas in-house counsel", "sas field program coordinator", "development office", "reply from management", "reply from adwoa b", "reply from kofi d", "reply from francesca l", "reply from dean marti", "réponse du propriétaire"]);
+  const replyNameSet = new Set(["dean marti", "management", "management reply", "mangement reply", "sas in-house counsel", "sas field program coordinator", "development office", "reply from management", "reply from adwoa b", "reply from kofi d", "reply from francesca l", "reply from dean marti", "réponse du propriétaire"]);
   const isReplyReview = (review) => review.isReply === true || replyNameSet.has(String(review.name || "").trim().toLowerCase());
 
   const reviewRows = view.reviews.map((review, idx) => ({
