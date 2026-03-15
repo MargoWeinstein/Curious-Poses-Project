@@ -801,6 +801,14 @@ window.REVIEW_DATA = {
         "text": "The salesmen are inefficient. I didn\u2019t want a history lesson and don\u2019t care about the villagers who supposedly wove the rug by hand. I just wanted to know the price. I\u2019m sure the tour guide would have gotten a big kickback if I bought anything. I didn\u2019t. I didn\u2019t tip the guide either. I\u2019ll find something on eBay when I get home."
       },
       {
+        "name": "Reply from proprietor",
+        "date": "May 2025",
+        "stars": 5,
+        "title": "",
+        "text": "Chad, we are sorry that we did not meet your expectations. Many travelers are eager to hear about where and how our rugs are made. I also apologize that you found our salesmen inefficient. Many travelers enjoy relaxing in our beautiful space and enjoying mint tea while they shop. Yes, we sometimes pay guides a commission for bringing buyers to our store, but that does not increase the negotiated price you pay. The guide\u2019s share comes from our profit not your pocket. If you return to Marrakech, please come back and ask for the manager. I will provide prompt service and a fair fixed price. I will throw in free shipping via DHL to anyplace in the US.",
+        "isReply": true
+      },
+      {
         "name": "Francois M",
         "date": "October 2025",
         "stars": 4.5,
